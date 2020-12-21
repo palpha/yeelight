@@ -2,6 +2,12 @@
 
 namespace Yeelight.Core
 {
+	public static class ValidationExt
+	{
+		public static bool InRange<T>( this T obj, T minInclusive, T maxInclusive ) where T : IComparable<T> =>
+			obj.CompareTo( minInclusive ) >= 0 && obj.CompareTo( maxInclusive ) <= 0;
+	}
+
 	public abstract record CommandValidationRule<T>( Func<T, bool> ValidateFn, string ErrorMessage )
 		: ICommandValidationRule where T : Command
 	{
@@ -18,18 +24,15 @@ namespace Yeelight.Core
 		}
 	}
 
-	public abstract record DurationRule<T>(
-		Func<T, TimeSpan> DurationFn,
-		Func<T, Effect> EffectFn ) : CommandValidationRule<T>(
+	public abstract record DurationRule<T>() : CommandValidationRule<T>(
 	x =>
 	{
-		if ( EffectFn( x ) == Effect.Sudden )
+		if ( x.Effect == Effect.Sudden )
 		{
 			return true;
 		}
 
-		var duration = DurationFn( x );
-		return duration.TotalMilliseconds >= 30 && duration.TotalMilliseconds <= 30000;
+		return x.Duration.TotalMilliseconds >= 30 && x.Duration.TotalMilliseconds <= 30000;
 	},
-	"Duration must be between 30 and 30000 milliseconds" ) where T : Command;
+	"Duration must be between 30 and 30000 milliseconds" ) where T : Command, IDurational;
 }

@@ -152,5 +152,13 @@ namespace Yeelight.Tests.Core
 			await Task.Delay( 100 );
 			await Test( command3 );
 		}
+
+		[Fact]
+		public async Task Can_set_hsv() =>
+			await Test(
+				new Commands.SetHsv(
+					Color.FromKnownColor( KnownColor.Cornsilk ),
+					Effect.Smooth,
+					TimeSpan.FromSeconds( 1 ) ) );
 	}
 }

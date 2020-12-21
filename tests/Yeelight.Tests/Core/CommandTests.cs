@@ -70,8 +70,8 @@ namespace Yeelight.Tests.Core
 			var command1 = new Commands.SetCtAbx( 123, Effect.Sudden, TimeSpan.FromSeconds( 1 ) );
 			var command2 = new Commands.SetCtAbx( 123, Effect.Smooth, TimeSpan.FromSeconds( 2 ) );
 
-			command1.GetParams().Should().BeEquivalentTo( 123, "sudden", 1000 );
-			command2.GetParams().Should().BeEquivalentTo( 123, "smooth", 2000 );
+			command1.Tag( 0 ).Params.Should().BeEquivalentTo( 123, "sudden", 1000 );
+			command2.Tag( 0 ).Params.Should().BeEquivalentTo( 123, "smooth", 2000 );
 		}
 
 		[Fact]
@@ -79,7 +79,40 @@ namespace Yeelight.Tests.Core
 		{
 			var command = new Commands.SetRgb( Color.FromArgb( 255, 0, 0 ), Effect.Smooth, TimeSpan.FromSeconds( 1 ) );
 
-			command.GetParams().Should().BeEquivalentTo( 0xFF0000, "smooth", 1000 );
+			command.Tag( 0 ).Params.Should().BeEquivalentTo( 0xFF0000, "smooth", 1000 );
+		}
+
+		[Fact]
+		public void SetHsv_uses_color()
+		{
+			var command = new Commands.SetHsv( Color.FromKnownColor( KnownColor.Azure ), Effect.Smooth, TimeSpan.FromSeconds( 1 ) );
+
+			command.GetParams().Should().BeEquivalentTo( 180, 1, Effect.Smooth, TimeSpan.FromSeconds( 1 ) );
+		}
+
+		[Theory]
+		[InlineData( 0, 0, 0, 100, true, true, true )]
+		[InlineData( 5, 5, 5, 100, true, true, true )]
+		[InlineData( 5, 5, 5, 20, false, true, true )]
+		[InlineData( 255, 255, 255, 100, true, true, true )]
+		// Color-based = can't represent invalid HSV?
+		public void SetHsv_validations_work(
+			ushort r, ushort g, ushort b, int ms,
+			bool expectedRule1, bool expectedRule2, bool expectedRule3 )
+		{
+			var command =
+				new Commands.SetHsv(
+					Color.FromArgb( r, g, b ),
+					Effect.Smooth,
+					TimeSpan.FromMilliseconds( ms ) );
+
+			var rule1 = new Commands.SetHsv.SetHsvDurationRule();
+			var rule2 = new Commands.SetHsv.HueRule();
+			var rule3 = new Commands.SetHsv.SaturationRule();
+
+			rule1.Validate( command ).Should().Be( expectedRule1, "duration" );
+			rule2.Validate( command ).Should().Be( expectedRule2, "hue" );
+			rule3.Validate( command ).Should().Be( expectedRule3, "saturation" );
 		}
 	}
 }

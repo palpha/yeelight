@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using FluentAssertions;
 using Xunit;
 using Yeelight.Core;
@@ -20,7 +21,7 @@ namespace Yeelight.Tests.Core
 		{
 			var command = new Commands.GetProp( "foo", "bar" );
 			command.Method.Should().Be( "get_prop" );
-			command.Params.Should().BeEquivalentTo( new[] { "bar", "foo" } );
+			command.GetParams().Should().BeEquivalentTo( new[] { "bar", "foo" } );
 			var serialized = command.Tag( 0 ).Serialize();
 			serialized.Replace( " ", "" ).Should().Be(
 				@"{""id"":0,""method"":""get_prop"",""params"":[""foo"",""bar""]}" );
@@ -46,12 +47,39 @@ namespace Yeelight.Tests.Core
 		[InlineData( 30, true )]
 		[InlineData( 30000, true )]
 		[InlineData( 30001, false )]
-		public void SetCtAbx_DurationValidator_validates_timespan( int milliseconds, bool expected )
+		public void SetCtAbx_DurationValidator_validates_duration( int milliseconds, bool expected )
 		{
-			var rule = new Commands.SetCtAbx.DurationRule();
+			var rule = new Commands.SetCtAbx.SetCtAbxDurationRule();
 			var command = new Commands.SetCtAbx( 0, Effect.Smooth, TimeSpan.FromMilliseconds( milliseconds ) );
 
 			rule.Validate( command ).Should().Be( expected );
+		}
+
+		[Fact]
+		public void SetCtAbx_DurationValidator_ignores_duration_if_sudden()
+		{
+			var rule = new Commands.SetCtAbx.SetCtAbxDurationRule();
+			var command = new Commands.SetCtAbx( 0, Effect.Sudden, TimeSpan.Zero );
+
+			rule.Validate( command ).Should().BeTrue();
+		}
+
+		[Fact]
+		public void SetCtAbx_converts_parameters()
+		{
+			var command1 = new Commands.SetCtAbx( 123, Effect.Sudden, TimeSpan.FromSeconds( 1 ) );
+			var command2 = new Commands.SetCtAbx( 123, Effect.Smooth, TimeSpan.FromSeconds( 2 ) );
+
+			command1.GetParams().Should().BeEquivalentTo( 123, "sudden", 1000 );
+			command2.GetParams().Should().BeEquivalentTo( 123, "smooth", 2000 );
+		}
+
+		[Fact]
+		public void SetRgb_converts_parameters()
+		{
+			var command = new Commands.SetRgb( Color.FromArgb( 255, 0, 0 ), Effect.Smooth, TimeSpan.FromSeconds( 1 ) );
+
+			command.GetParams().Should().BeEquivalentTo( 0xFF0000, "smooth", 1000 );
 		}
 	}
 }

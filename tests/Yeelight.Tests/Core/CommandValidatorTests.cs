@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using FluentAssertions;
 using Xunit;
 using Yeelight.Core;
@@ -7,7 +8,13 @@ namespace Yeelight.Tests.Core
 {
 	public class CommandValidatorTests
 	{
-		public record SomeCommand( string Foo, string Bar ) : Command<string>();
+		public record SomeCommand( string Foo, string Bar ) : Command<string>()
+		{
+			public override IEnumerable<object> GetParams()
+			{
+				yield return Foo;
+			}
+		}
 
 		public class FoobarValidator : ICommandValidationRule
 		{

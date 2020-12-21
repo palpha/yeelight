@@ -49,7 +49,8 @@ namespace Yeelight.Core
 
 			Logger.LogDebug( "Sending {0} to {1}", tagged, target.Endpoint );
 
-			await connection.SendAsync( tagged.Serialize(), cancellationToken );
+			var serialized = tagged.Serialize();
+			await connection.SendAsync( serialized, cancellationToken );
 			return (await future.Task).Result;
 		}
 	}

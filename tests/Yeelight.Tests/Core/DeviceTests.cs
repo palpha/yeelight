@@ -3,9 +3,33 @@ using Xunit;
 using Yeelight.Core;
 using FluentAssertions;
 using System.Net;
+using System.Drawing;
 
 namespace Yeelight.Tests.Core
 {
+	public class ColorExtTests
+	{
+		[Theory]
+		[InlineData( 0x0000FF, 0, 0, 255 )]
+		[InlineData( 0x00FFFF, 0, 255, 255 )]
+		[InlineData( 0xFFFFFF, 255, 255, 255 )]
+		public void CanConvertFromUInt( uint incoming, byte r, byte g, byte b )
+		{
+			var color = ColorExt.ToColor( incoming );
+			(color.R, color.G, color.B).Should().Be( (r, g, b) );
+		}
+
+		[Theory]
+		[InlineData( 0x0000FF, 0, 0, 255 )]
+		[InlineData( 0x00FFFF, 0, 255, 255 )]
+		[InlineData( 0xFFFFFF, 255, 255, 255 )]
+		public void CanConvertToUInt( uint expected, byte r, byte g, byte b )
+		{
+			var color = Color.FromArgb( r, g, b );
+			ColorExt.ToUInt( color ).Should().Be( expected );
+		}
+	}
+
 	public class DeviceTests
 	{
 		[Fact]
@@ -23,7 +47,7 @@ namespace Yeelight.Tests.Core
 				device.Brightness.Should().Be( 100 );
 				device.ColorMode.Should().Be( ColorMode.ColorTemperature );
 				device.Temperature.Should().Be( 3907 );
-				device.Color.Should().Be( Device.ParseColor( 6399 ) );
+				device.Color.Should().Be( ((uint) 6399).ToColor() );
 				((int) device.Color.GetHue()).Should().Be( 234 );
 				((int) device.Color.GetSaturation() * 100).Should().Be( 100 );
 				device.Hue.Should().Be( 234 );
@@ -37,7 +61,7 @@ namespace Yeelight.Tests.Core
 		[Fact]
 		public void Can_parse_rgb_value()
 		{
-			var value = Device.ParseColor( 16777215 );
+			var value = ((uint) 16777215).ToColor();
 			value.R.Should().Be( 255 );
 			value.G.Should().Be( 255 );
 			value.B.Should().Be( 255 );

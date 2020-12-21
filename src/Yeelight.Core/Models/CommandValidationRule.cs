@@ -17,4 +17,19 @@ namespace Yeelight.Core
 			return ValidateFn( commandOfT );
 		}
 	}
+
+	public abstract record DurationRule<T>(
+		Func<T, TimeSpan> DurationFn,
+		Func<T, Effect> EffectFn ) : CommandValidationRule<T>(
+	x =>
+	{
+		if ( EffectFn( x ) == Effect.Sudden )
+		{
+			return true;
+		}
+
+		var duration = DurationFn( x );
+		return duration.TotalMilliseconds >= 30 && duration.TotalMilliseconds <= 30000;
+	},
+	"Duration must be between 30 and 30000 milliseconds" ) where T : Command;
 }

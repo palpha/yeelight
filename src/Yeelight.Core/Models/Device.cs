@@ -39,9 +39,6 @@ namespace Yeelight.Core
 		string Name,
 		ushort MaxAge ) : Target( Location, Support )
 	{
-		public static Color ParseColor( uint colorInt ) =>
-			ColorTranslator.FromHtml( $"#{colorInt:X2}" );
-
 		public static uint ParseId( string idStr ) =>
 			uint.Parse(
 				idStr.Replace( "0x", string.Empty ),
@@ -97,7 +94,7 @@ namespace Yeelight.Core
 				Brightness: ushort.Parse( GetMatch( x => x.Brightness ) ),
 				ColorMode: Enum.Parse<ColorMode>( GetMatch( x => x.ColorMode ) ),
 				Temperature: ushort.Parse( GetMatch( x => x.Temperature ) ),
-				Color: ParseColor( uint.Parse( GetMatch( x => x.Color ) ) ),
+				Color: uint.Parse( GetMatch( x => x.Color ) ).ToColor(),
 				Hue: ushort.Parse( GetMatch( x => x.Hue ) ),
 				Saturation: ushort.Parse( GetMatch( x => x.Saturation ) ),
 				Name: GetMatch( x => x.Name ),

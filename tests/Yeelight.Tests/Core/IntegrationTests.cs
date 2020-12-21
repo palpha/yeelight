@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -56,7 +57,7 @@ namespace Yeelight.Tests.Core
 
 		private async Task Test<T>(
 			Command<T> command,
-			Action<ICollection<T>> test )
+			Action<ICollection<T>>? resultTest = null )
 		{
 			if ( IsConfigured == false )
 			{
@@ -80,7 +81,7 @@ namespace Yeelight.Tests.Core
 							command,
 							GetToken() );
 
-					test( result );
+					resultTest?.Invoke( result );
 					success = true;
 					Output.WriteLine( $"{command} sent successfully to {device.Endpoint} ({device.Model})" );
 					break;
@@ -117,13 +118,39 @@ namespace Yeelight.Tests.Core
 		public async Task Set_ct_abx_is_validated() =>
 			await Assert.ThrowsAsync<CommandNotValidException>(
 				() => Test(
-					new Commands.SetCtAbx( 0, Effect.Smooth, TimeSpan.FromMilliseconds( 100 ) ),
-					x => { } ) );
+					new Commands.SetCtAbx(
+						0,
+						Effect.Smooth,
+						TimeSpan.FromMilliseconds( 100 ) ) ) );
 
 		[Fact]
 		public async Task Can_set_ct_abx() =>
 			await Test(
-				new Commands.SetCtAbx( 2000, Effect.Smooth, TimeSpan.FromMilliseconds( 30 ) ),
-				x => { } );
+				new Commands.SetCtAbx(
+					2000,
+					Effect.Smooth,
+					TimeSpan.FromMilliseconds( 30 ) ) );
+
+		[Fact]
+		public async Task Can_set_rgb() =>
+			await Test(
+				new Commands.SetRgb(
+					Color.FromArgb( 255, 0, 0 ),
+					Effect.Smooth,
+					TimeSpan.FromMilliseconds( 5000 ) ) );
+
+		[Fact]
+		public async Task Can_set_colors_quickly()
+		{
+			var command = new Commands.SetRgb( Color.FromArgb( 0, 0, 255 ), Effect.Sudden, TimeSpan.Zero );
+			var command2 = command with { Color = Color.FromArgb( 0, 255, 0 ) };
+			var command3 = command with { Color = Color.FromArgb( 255, 0, 0 ) };
+
+			await Test( command );
+			await Task.Delay( 100 );
+			await Test( command2 );
+			await Task.Delay( 100 );
+			await Test( command3 );
+		}
 	}
 }
